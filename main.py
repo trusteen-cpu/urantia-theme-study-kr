@@ -29,15 +29,21 @@ if not api_key:
 DATA_DIR = "data"
 KR_PATH = os.path.join(DATA_DIR, "urantia_kr.txt")
 
+import chardet  # ← 맨 위 import 목록에 추가!
+
 def safe_read_text(path: str) -> list[str]:
-    encodings = ["utf-8", "utf-8-sig", "cp949", "euc-kr", "latin-1"]
-    for enc in encodings:
-        try:
-            with open(path, "r", encoding=enc) as f:
-                return f.readlines()
-        except:
-            continue
-    return []
+    """파일 인코딩을 자동 감지하여 올바르게 읽기"""
+    try:
+        with open(path, "rb") as f:
+            raw = f.read()
+            enc = chardet.detect(raw)["encoding"] or "utf-8"
+            text = raw.decode(enc, errors="ignore")
+            # 줄 단위 분리, BOM 제거
+            lines = [l.replace("\ufeff", "").strip() for l in text.splitlines() if l.strip()]
+            return lines
+    except Exception as e:
+        print("파일 읽기 오류:", e)
+        return []
 
 @st.cache_data
 def load_urantia_kr():
