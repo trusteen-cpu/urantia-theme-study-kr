@@ -62,15 +62,24 @@ def search_passages(keyword: str, lines: list[str], limit: int = 200):
     if not keyword:
         return []
 
-    # 정규식 부분 일치 검색 (예: '신' → '신은', '신성', '신께서'도 매칭)
-    try:
-        pattern = re.compile(keyword)
-    except re.error:
-        # 정규식 특수문자 입력 시 자동 이스케이프
-        pattern = re.compile(re.escape(keyword))
+    # 검색어 정리 (공백, BOM 제거)
+    key = keyword.strip().replace("\ufeff", "")
 
-    results = [l.strip() for l in lines if re.search(pattern, l)]
+    # 정규식 패턴: 키워드가 단어 내부에 포함되어도 매칭
+    try:
+        pattern = re.compile(key)
+    except re.error:
+        pattern = re.compile(re.escape(key))
+
+    results = []
+    for i, l in enumerate(lines, 1):
+        clean_line = l.strip().replace("\ufeff", "")  # BOM 제거
+        if re.search(pattern, clean_line):
+            # 절 번호 + 본문 표시
+            results.append(f"{i}: {clean_line}")
+
     return results[:limit]
+
 
 # -----------------------
 # GPT 보고서 및 슬라이드 생성
