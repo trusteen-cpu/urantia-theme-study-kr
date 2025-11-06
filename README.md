@@ -1,2 +1,28 @@
-# urantia-theme-study-kr
-유란시아서의 주제를 탐구하고 싶은 사람들을 위한 도구. AI가 본문에서 관련 구절을 찾아 신학적 해석과 슬라이드 개요를 자동으로 만들어 줍니다.
+# 유란시아 주제 연구 (Urantia Theme Study – Korean Edition)
+
+이 앱은 유란시아서의 특정 주제를 입력하면,
+본문에서 관련 구절을 찾아 AI가 신학적 보고서와 5장의 슬라이드 개요를 생성하는 도구입니다.
+
+---
+
+## 🚀 사용 방법
+
+1. `data/urantia_kr.txt` 파일에 유란시아서 한국어 본문을 넣습니다.
+2. OpenAI API 키를 Render 또는 GitHub Secrets에 등록합니다.
+3. 앱 실행:
+   ```bash
+   streamlit run main.py
+   ```
+
+---
+
+## 📁 폴더 구조
+```
+urantia-theme-study-kr/
+│
+├── main.py
+├── requirements.txt
+├── README.md
+└── data/
+    └── urantia_kr.txt
+```
