@@ -89,7 +89,7 @@ def generate_gpt_report_and_slides(term: str, passages: list[str]):
 ## 1부. 신학적 보고서 (700~1000자)
 - 이 주제의 유란시아적 의미와 기원  
 - 신성, 우주론적 관점에서의 중요성  
-- 아버지, 최극자, 조율자와의 관계  
+- 아버지, 최상 존재, 조절자와의 관계  
 - 인간의 상승 체험과 철학적 함의  
 - 인간 신앙과 삶에 주는 교훈
 
@@ -135,7 +135,7 @@ def generate_gpt_report_and_slides(term: str, passages: list[str]):
 # UI
 # -----------------------
 st.header("1️⃣ 주제 입력")
-term = st.text_input("예: 최극자, 신성, 조율자, 신앙, 상승, 미가엘", "", key="kr_theme_input")
+term = st.text_input("예: 최상 존재, 신성, 생각 조절자, 신앙, 상승, 미가엘", "", key="kr_theme_input")
 
 passages = search_passages(term, urantia_lines) if term else []
 
