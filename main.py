@@ -6,9 +6,9 @@ from openai import OpenAI
 # -----------------------
 # 기본 설정
 # -----------------------
-st.set_page_config(page_title="유란시아 주제 연구 – Korean Plus", layout="wide")
-st.title("📘 유란시아 주제 연구 – Korean Plus Edition")
-st.caption("한글 유란시아서 본문에서 주제를 찾아 AI가 보고서와 슬라이드를 생성합니다. (각주 포함 확장판)")
+st.set_page_config(page_title="유란시아 주제 연구 – Korean Max", layout="wide")
+st.title("📘 유란시아 주제 연구 – Korean Max Edition")
+st.caption("한글 유란시아서 본문에서 주제를 찾아 AI가 보고서와 슬라이드를 생성합니다. (4000줄 + 각주 + 다운로드 지원)")
 
 # -----------------------
 # API Key (Render 환경 변수)
@@ -57,29 +57,36 @@ def load_urantia_kr():
 urantia_lines = load_urantia_kr()
 
 # -----------------------
-# 검색 함수
+# 검색 함수 (하이라이트 + 절번호 추출)
 # -----------------------
-def search_passages(keyword: str, lines: list[str], limit: int = 2000):
+def search_passages(keyword: str, lines: list[str], limit: int = 4000):
+    """검색어를 포함한 구절을 찾아 하이라이트 및 절번호 추출"""
     if not keyword:
         return []
+
     key = keyword.strip()
     try:
         pattern = re.compile(re.escape(key))
     except re.error:
         pattern = re.compile(key)
+
     results = []
     for line in lines:
         clean_line = line.replace("\ufeff", "")
         if re.search(pattern, clean_line):
+            # 절번호 추출 (예: 5:6.7)
             match = re.search(r"\d+:\d+\.\d+", clean_line)
             verse_ref = f"({match.group(0)})" if match else ""
+            # 검색어 하이라이트
             highlighted = re.sub(
                 pattern,
                 lambda m: f"<mark style='background-color:#fffd75'>{m.group(0)}</mark>",
                 clean_line,
             )
             results.append(f"{highlighted} {verse_ref}")
-    return results[:limit]
+            if len(results) >= limit:
+                break
+    return results
 
 # -----------------------
 # GPT 보고서 + 슬라이드 생성
@@ -125,7 +132,7 @@ def generate_gpt_report_and_slides(term: str, passages: list[str]):
         return f"⚠️ GPT 오류 발생: {e}"
 
 # -----------------------
-# UI
+# UI 구성
 # -----------------------
 st.subheader("1️⃣ 주제 입력")
 term = st.text_input("예: 신성, 최극자, 조율자, 미가엘, 상승, 신앙", "", key="term_input")
@@ -142,13 +149,23 @@ else:
         if term and passages:
             for p in passages:
                 st.markdown(p, unsafe_allow_html=True)
+            # 다운로드 버튼 생성
+            joined_text = "\n".join(re.sub(r"<.*?>", "", p) for p in passages)
+            st.download_button(
+                label="💾 검색 결과 TXT로 다운로드",
+                data=joined_text.encode("utf-8"),
+                file_name=f"urantia_search_{term}.txt",
+                mime="text/plain",
+            )
+            if len(passages) == 4000:
+                st.warning("⚠️ 검색 결과가 4000줄로 제한되었습니다. 더 많은 구절이 있을 수 있습니다.")
         elif term:
             st.info("관련 구절이 없습니다. 다른 단어나 주제를 입력해보세요.")
 
 st.subheader("3️⃣ AI 보고서 + 슬라이드 생성")
 
 if st.button("✨ AI 보고서 및 슬라이드 생성"):
-    with st.spinner("AI가 보고서 및 슬라이드를 작성 중입니다... (약 30초 소요)"):
+    with st.spinner("AI가 보고서 및 슬라이드를 작성 중입니다... (약 30~40초 소요)"):
         passages = search_passages(term, urantia_lines)
         result = generate_gpt_report_and_slides(term, passages)
     st.markdown(result)
