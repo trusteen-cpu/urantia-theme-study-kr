@@ -61,8 +61,8 @@ def highlight_term(text: str, term: str) -> str:
 def search_passages(keyword: str, lines: list[str], limit: int = 200):
     if not keyword:
         return []
-    key = keyword.lower()
-    results = [l.strip() for l in lines if key in l.lower()]
+    key = keyword.strip()
+    results = [l.strip() for l in lines if key in l]
     return results[:limit]
 
 # -----------------------
