@@ -171,3 +171,7 @@ if st.button("✨ 보고서 및 슬라이드 생성", key="generate_btn_kr"):
     st.markdown(result)
 else:
     st.info("주제를 입력하고 버튼을 눌러 보고서를 생성하세요.")
+st.divider()
+st.write("📄 파일 미리보기 (처음 5줄):")
+for line in urantia_lines[:5]:
+    st.text(line)
