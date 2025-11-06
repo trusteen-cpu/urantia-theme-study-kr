@@ -61,8 +61,15 @@ def highlight_term(text: str, term: str) -> str:
 def search_passages(keyword: str, lines: list[str], limit: int = 200):
     if not keyword:
         return []
-    key = keyword.strip()
-    results = [l.strip() for l in lines if key in l]
+
+    # 정규식 부분 일치 검색 (예: '신' → '신은', '신성', '신께서'도 매칭)
+    try:
+        pattern = re.compile(keyword)
+    except re.error:
+        # 정규식 특수문자 입력 시 자동 이스케이프
+        pattern = re.compile(re.escape(keyword))
+
+    results = [l.strip() for l in lines if re.search(pattern, l)]
     return results[:limit]
 
 # -----------------------
