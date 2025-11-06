@@ -37,7 +37,6 @@ KR_PATH = find_existing_path()
 # 파일 읽기
 # -----------------------
 def safe_read_text(path: str) -> list[str]:
-    """파일 인코딩 문제를 방지하며 안전하게 읽기"""
     encodings = ["utf-8", "utf-8-sig", "cp949", "euc-kr", "latin-1"]
     for enc in encodings:
         try:
@@ -83,16 +82,70 @@ def generate_gpt_report_and_slides(term: str, passages: list[str]):
     client = OpenAI(api_key=api_key)
     joined_passages = "\n".join(passages) or "관련 구절을 찾지 못했습니다."
 
-    prompt = f"""
-당신은 유란시아서를 연구하는 신학자입니다.
+    # 삼중 따옴표 제거한 안전한 문자열 (Render 호환)
+    prompt = (
+        "당신은 유란시아서를 연구하는 신학자입니다.\n\n"
+        f"주제: {term}\n\n"
+        "아래는 이 주제와 관련 있다고 판단되는 유란시아서 본문입니다.\n\n"
+        "---\n\n"
+        "1부. 신학적 보고서 (700~1000자)\n"
+        "- 이 주제의 유란시아적 의미\n"
+        "- 신성/우주론적 중요성\n"
+        "- 아버지, 최극존재, 생각조율자와의 관계\n"
+        "- 인간 상승 체험과의 연결\n"
+        "- 오늘의 신앙과 삶에 주는 교훈\n\n"
+        "2부. 5장 슬라이드 개요\n"
+        "각 슬라이드는 다음 요소를 포함합니다:\n"
+        "- 제목 1줄\n"
+        "- 핵심 포인트 3~5개\n"
+        "- 발표자 노트 (300~500자)\n\n"
+        "형식 예시:\n"
+        "# 슬라이드 1: ...\n"
+        "- ...\n"
+        "발표자 노트: ...\n\n"
+        f"---\n\n참고 본문:\n{joined_passages}"
+    )
 
-주제: "{term}"
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "너는 유란시아서 신학과 교육에 능통한 학자이다."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return resp.choices[0].message.content
+    except Exception as e:
+        return f"⚠️ GPT 오류 발생: {e}"
 
-아래는 이 주제와 관련 있다고 판단되는 유란시아서 본문입니다.
+# -----------------------
+# UI
+# -----------------------
+st.subheader("1️⃣ 주제 입력")
+term = st.text_input("예: 신성, 최극자, 조율자, 미가엘, 상승, 신앙", "", key="term_input")
 
----
+st.subheader("2️⃣ 관련 구절 검색 결과")
 
-## 1부. 신학적 보고서 (700~1000자)
-- 이 주제의 유란시아적 의미
-- 신성/우주론적 중요성
-- 아버지, 최극존
+if not KR_PATH:
+    st.error("📂 data 폴더에 urantia_ko.txt (또는 urantia_kr.txt)가 없습니다.")
+else:
+    if not urantia_lines:
+        st.error("⚠️ 파일은 있지만 내용이 비어 있습니다. 인코딩(UTF-8) 확인이 필요합니다.")
+    else:
+        passages = search_passages(term, urantia_lines) if term else []
+        if term and passages:
+            for p in passages:
+                st.markdown(p)
+        elif term:
+            st.info("관련 구절이 없습니다. 다른 단어나 주제를 입력해보세요.")
+
+st.subheader("3️⃣ AI 보고서 + 슬라이드 생성")
+
+if st.button("✨ AI 보고서 및 슬라이드 생성"):
+    with st.spinner("AI가 보고서를 작성 중입니다..."):
+        passages = search_passages(term, urantia_lines)
+        result = generate_gpt_report_and_slides(term, passages)
+    st.markdown(result)
+else:
+    st.caption("주제를 입력하고 버튼을 누르면 AI가 분석 결과를 생성합니다.")
+
