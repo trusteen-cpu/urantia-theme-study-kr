@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import re
-from html import escape
 from openai import OpenAI
 
 # -----------------------
@@ -38,13 +37,15 @@ KR_PATH = find_existing_path()
 # 파일 읽기
 # -----------------------
 def safe_read_text(path: str) -> list[str]:
+    """파일 인코딩 문제를 방지하며 안전하게 읽기"""
     encodings = ["utf-8", "utf-8-sig", "cp949", "euc-kr", "latin-1"]
     for enc in encodings:
         try:
             with open(path, "r", encoding=enc) as f:
                 lines = f.readlines()
-                return [l.replace("\ufeff", "").rstrip("\r\n") for l in lines if l.strip()]
-        except:
+                cleaned = [l.replace("\ufeff", "").rstrip("\r\n") for l in lines if l.strip()]
+                return cleaned
+        except Exception:
             continue
     return []
 
@@ -94,40 +95,4 @@ def generate_gpt_report_and_slides(term: str, passages: list[str]):
 ## 1부. 신학적 보고서 (700~1000자)
 - 이 주제의 유란시아적 의미
 - 신성/우주론적 중요성
-- 아버지, 최상 존재, 생각조절자와의 관계
-- 인간 상승 체험과의 연결
-- 오늘의 신앙과 삶에 주는 교훈
-
-## 2부. 5장 슬라이드 개요
-각 슬라이드는
-- 제목 1줄
-- 핵심 포인트 3~5개
-- `발표자 노트:` 300~500자
-
-아래 형식으로 출력하세요:
-
-# 슬라이드 1: ...
-- ...
-발표자 노트: ...
-
-# 슬라이드 2: ...
-...
-
----
-
-### 참고 본문:
-{joined_passages}
-"""
-
-    try:
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "너는 유란시아서 신학과 교육에 능통한 학자이다."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return resp.choices
-
-
-
+- 아버지, 최극존
