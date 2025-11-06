@@ -27,7 +27,7 @@ if not api_key:
 # 데이터 로드
 # -----------------------
 DATA_DIR = "data"
-KR_PATH = os.path.join(DATA_DIR, "urantia_kr.txt")
+KR_PATH = os.path.join(DATA_DIR, "urantia_ko.txt")
 
 import chardet  # ← 맨 위 import 목록에 추가!
 
