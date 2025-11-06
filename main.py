@@ -37,6 +37,7 @@ KR_PATH = find_existing_path()
 # 파일 읽기
 # -----------------------
 def safe_read_text(path: str) -> list[str]:
+    """파일 인코딩 문제를 방지하며 안전하게 읽기"""
     encodings = ["utf-8", "utf-8-sig", "cp949", "euc-kr", "latin-1"]
     for enc in encodings:
         try:
@@ -57,11 +58,13 @@ def load_urantia_kr():
 urantia_lines = load_urantia_kr()
 
 # -----------------------
-# 검색 함수
+# 검색 함수 (하이라이트 포함)
 # -----------------------
 def search_passages(keyword: str, lines: list[str], limit: int = 200):
+    """검색어를 포함한 구절을 찾아 하이라이트 표시"""
     if not keyword:
         return []
+
     key = keyword.strip()
     try:
         pattern = re.compile(re.escape(key))
@@ -69,10 +72,15 @@ def search_passages(keyword: str, lines: list[str], limit: int = 200):
         pattern = re.compile(key)
 
     results = []
-    for i, line in enumerate(lines, 1):
+    for line in lines:
         clean_line = line.replace("\ufeff", "")
         if re.search(pattern, clean_line):
-            results.append(f"{i}: {clean_line}")
+            highlighted = re.sub(
+                pattern,
+                lambda m: f"<mark style='background-color:#fffd75'>{m.group(0)}</mark>",
+                clean_line,
+            )
+            results.append(highlighted)
     return results[:limit]
 
 # -----------------------
@@ -82,7 +90,6 @@ def generate_gpt_report_and_slides(term: str, passages: list[str]):
     client = OpenAI(api_key=api_key)
     joined_passages = "\n".join(passages) or "관련 구절을 찾지 못했습니다."
 
-    # 삼중 따옴표 제거한 안전한 문자열 (Render 호환)
     prompt = (
         "당신은 유란시아서를 연구하는 신학자입니다.\n\n"
         f"주제: {term}\n\n"
@@ -135,7 +142,7 @@ else:
         passages = search_passages(term, urantia_lines) if term else []
         if term and passages:
             for p in passages:
-                st.markdown(p)
+                st.markdown(p, unsafe_allow_html=True)
         elif term:
             st.info("관련 구절이 없습니다. 다른 단어나 주제를 입력해보세요.")
 
@@ -148,4 +155,5 @@ if st.button("✨ AI 보고서 및 슬라이드 생성"):
     st.markdown(result)
 else:
     st.caption("주제를 입력하고 버튼을 누르면 AI가 분석 결과를 생성합니다.")
+
 
